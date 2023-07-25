@@ -158,8 +158,8 @@ background-color: rgb(229, 229, 229);</string>
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>100</width>
-            <height>30</height>
+            <width>180</width>
+            <height>444</height>
            </rect>
           </property>
           <attribute name="label">
@@ -205,14 +205,14 @@ background-color: rgb(229, 229, 229);</string>
           <item>
            <widget class="QStackedWidget" name="Pages">
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="pag_despesas">
              <layout class="QHBoxLayout" name="horizontalLayout_3">
               <item>
                <widget class="QTabWidget" name="tabWidget">
                 <property name="currentIndex">
-                 <number>1</number>
+                 <number>0</number>
                 </property>
                 <widget class="QWidget" name="tab_boletas">
                  <attribute name="title">

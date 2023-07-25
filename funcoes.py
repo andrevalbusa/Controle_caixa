@@ -30,4 +30,3 @@ def extrair_codigo():
 
     
     return 
-
