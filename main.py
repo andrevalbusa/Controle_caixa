@@ -1,4 +1,5 @@
 import sys
+import os
 from typing import Optional
 from datetime import datetime, timedelta
 from PyQt5 import QtWidgets, uic
@@ -19,7 +20,13 @@ from layout_CC import Ui_MainWindow
 import sqlite3
 
 ######################################### CRIAÇÃO DATABASE E TABELAS #################################
-conn = sqlite3.connect('database_CC.db')
+diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+nome_arquivo_db = 'database_CC.db'
+caminho_banco_dados = os.path.join(diretorio_atual, nome_arquivo_db)
+
+# Cria a conexão com o banco de dados
+conn = sqlite3.connect(caminho_banco_dados)
+
 cursor = conn.cursor()
 cursor.execute('CREATE TABLE IF NOT EXISTS despesas (id INTEGER PRIMARY KEY, descricao TEXT, vencimento DATE ,valor REAL, codigo TEXT)')
 cursor.execute('CREATE TABLE IF NOT EXISTS receitas (id INTEGER PRIMARY KEY, origem TEXT, dia DATE ,valor REAL, descricao TEXT)')
@@ -42,6 +49,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ################################### EXTRACAO DE INFORMAÇÕES DO COD DE BARRAS ##################################################
         self.btn_extrair.clicked.connect(self.extrair_codigo)
         self.btn_adicionar.clicked.connect(self.gravar_boleto)
+        self.checkBox.clicked.connect(self.checkbox_despesas)
+        self.btn_adicionar_outros.clicked.connect(self.gravar_outros)
+        self.checkBox_2.clicked.connect(self.checkbox_receitas)
+        self.salvar_receita.clicked.connect(self.gravar_receita)
+
 
     def extrair_codigo(self):
         codigo = self.cod_boleta.text()
@@ -89,12 +101,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return chavepk, fornecedor, data, valor_boleto, codigo
 
     def gravar_boleto(self):
+
         valores = self.extrair_codigo()
 
         if valores[0] is not None:  
-            conn = sqlite3.connect('database_CC.db')
+            conn = sqlite3.connect(caminho_banco_dados)
             cursor = conn.cursor()
-            data_str = valores[2].toString("yyyy-MM-dd")
+            data_str = valores[2].toString("dd-MM-yyyy")
             cursor.execute('INSERT INTO despesas(descricao, vencimento, valor, codigo) VALUES (?, ?, ?, ?)',
                                             (valores[1], data_str, valores[3], valores[4]))  
             conn.commit()
@@ -113,6 +126,69 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.valor_boleta.clear()
         self.fornecedor.clear()
         return
+
+    def checkbox_despesas(self, state):
+        if state == True:
+            current_date = QDate.currentDate()
+            self.data_outros.setDate(current_date)
+            self.data_outros.setEnabled(True)
+        return
+
+    def gravar_outros(self):
+        descricaooutros = self.descricao_outros.text()
+        valoroutros = self.valor_outros.text()
+        dataoutros = self.data_outros.date()
+        dataoutrosform = dataoutros.toString("dd-MM-yyyy")
+        codigo = 'N/A'
+
+        conn = sqlite3.connect(caminho_banco_dados)
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO despesas(descricao, vencimento, valor, codigo) VALUES (?, ?, ?, ?)',
+                                                (descricaooutros, dataoutrosform, valoroutros, codigo))
+        conn.commit()
+        conn.close()
+
+        self.descricao_outros.clear()
+        self.valor_outros.clear()
+        self.data_outros.clear()
+
+        return
+
+    def checkbox_receitas(self, state):
+        if state == True:
+            current_date = QDate.currentDate()
+            self.data_receita.setDate(current_date)
+            self.data_receita.setEnabled(True)
+        return
+    
+    def gravar_receita(self):
+        origem = self.origem_receita.currentText()
+        valor_r = self.valor_receita.text()
+        data_r = self.data_receita.date().toString('dd/MM/yyyy')
+        descricao = self.descricao_receita.toPlainText()
+
+        if origem is not None and valor_r is not None and data_r is not None:
+            conn = sqlite3.connect(caminho_banco_dados)
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO receitas (origem, dia, valor, descricao) VALUES (?, ?, ?, ?)',
+                                                (origem, data_r, valor_r, descricao))
+            conn.commit()
+            conn.close()
+        else:
+            error_message = "Erro: verifique os dados inseridos"
+            error_box = QMessageBox()
+            error_box.setIcon(QMessageBox.Warning)
+            error_box.setWindowTitle("Erro")
+            error_box.setText(error_message)
+            error_box.setStandardButtons(QMessageBox.Ok)
+            error_box.exec()
+        
+        self.origem_receita.clear()
+        self.valor_receita.clear()
+        self.data_receita.clear()
+        self.descricao_receita.clear()
+        return
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
