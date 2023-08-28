@@ -32,8 +32,6 @@ cursor.execute('CREATE TABLE IF NOT EXISTS despesas (id INTEGER PRIMARY KEY, des
 cursor.execute('CREATE TABLE IF NOT EXISTS receitas (id INTEGER PRIMARY KEY, origem TEXT, dia DATE ,valor REAL, descricao TEXT)')
 
 
-
-
 class MainWindow(QMainWindow, Ui_MainWindow):  
 
     def __init__(self):
@@ -57,13 +55,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extrair_codigo(self):
         codigo = self.cod_boleta.text()
-        check = codigo.isnumeric()
+        string_size = len(codigo)
+        check_numerico = codigo.isnumeric()
         chavepk = None
         fornecedor = None
         data =  None
         valor_boleto = None
+        
+        if string_size != 47 and string_size != 43: 
+            
+            error_message = "Confira o Codigo de Barras."
+            error_box = QMessageBox()
+            error_box.setIcon(QMessageBox.Warning)
+            error_box.setWindowTitle("Erro")
+            error_box.setText(error_message)
+            error_box.setStandardButtons(QMessageBox.Ok)
+        
+            error_box.exec()
 
-        if check == True:
+        if check_numerico == True:
             cod_inst = codigo[0:3]
              ################ DATA DE VENCIMENTO ################
             cod_vencimento = int(codigo[31:35])
@@ -79,9 +89,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ui.vencimento_boleta.setDate(data)
 
             #################### VALOR BOLETO ##################
-            cod_reais = int(codigo[35:43])
+            cod_reais = int(codigo[37:45])
             reais_format = str(cod_reais)
-            cod_centavos = codigo[43:45]
+            cod_centavos = str(codigo[45:47])
             valor_boleto = (reais_format + ',' + cod_centavos)
             ui.valor_boleta.setText(valor_boleto)
 
@@ -151,7 +161,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.descricao_outros.clear()
         self.valor_outros.clear()
         self.data_outros.clear()
-
         return
 
     def checkbox_receitas(self, state):
